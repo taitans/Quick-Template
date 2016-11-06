@@ -1,0 +1,13 @@
+# git ignore file
+backup/
+Nuget/
+bin/
+obj/
+logs/
+*.[pdb]
+*.suo
+*.user
+*.pdb
+*.tmp
+.vs
+packages/

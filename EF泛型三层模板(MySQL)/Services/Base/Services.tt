@@ -1,0 +1,58 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.IO" #>
+<#@ Import Namespace="System.Linq" #>
+<#@ Import Namespace="System.Text" #>
+<#@ import namespace="System.Reflection" #>
+<#@ Import Namespace="System.Collections.Generic" #>
+<#@ import namespace="System.ComponentModel" #>
+<#@ output extension=".cs" #>
+<#@ include file="$(SolutionDir)\Models\T4\ModelAuto.ttinclude" #>
+<#
+	string currentPath = Path.GetDirectoryName(Host.TemplateFile);
+	string projectPath = currentPath.Substring(0,currentPath.IndexOf(@"\Base"));
+    string solutionPath = currentPath.Substring(0, currentPath.IndexOf(@"\Services"));
+	string modelNamespace = "Models";
+
+	string modelFile = Path.Combine(solutionPath, @"Models\bin\Debug");
+	string[] files = Directory.GetFiles(modelFile,"*.dll",SearchOption.TopDirectoryOnly).ToArray();
+	Assembly[] assemblies = files.Select(Assembly.LoadFrom).Distinct().ToArray();
+	
+	IEnumerable<Type> modelTypes = assemblies.SelectMany(assembly => assembly.GetTypes().Where(type => type.Namespace == modelNamespace && !type.IsAbstract)).Distinct();
+
+	var manager = new Manager(Host, GenerationEnvironment, true) { OutputPath = currentPath};
+    foreach (Type modelType in modelTypes)
+    {
+		var descAttributes = modelType.GetCustomAttributes(typeof(DescriptionAttribute), true);
+
+		string description = descAttributes.Length == 1 ? ((DescriptionAttribute)descAttributes[0]).Description : modelType.Name;
+
+		manager.StartBlock(modelType.Name + "Service.cs");
+#>
+using IRepositories;
+using IServices;
+using Models;
+
+namespace Services
+{
+	/// <summary>
+    ///   业务操作层实现——<#= description #>
+    /// </summary>
+    public partial class <#= modelType.Name #>Service : BaseService<<#= modelType.Name #>>, I<#= modelType.Name #>Service
+    {
+		I<#= modelType.Name #>Repository dal;
+
+		public <#= modelType.Name #>Service(I<#= modelType.Name #>Repository dal)
+		{
+			this.dal = dal;
+			base.baseDal = dal;
+		}
+	}
+}
+<# manager.EndBlock(); #>
+<# 
+		
+    }
+
+#>
+<#  manager.Process(true); #>
