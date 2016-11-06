@@ -1,0 +1,34 @@
+﻿<h2>Welcome to ASP.NET MVC @ViewData["Version"] on @ViewData["Runtime"]!</h2>
+@{
+    IQueryable<Models.Persons> persons = ViewData["query"] as IQueryable<Models.Persons>;
+}
+<style>
+    table {
+         border-collapse: collapse;
+    }
+
+    td {
+        border: 1px solid #0094ff;
+    }
+</style>
+<table>
+    <thead>
+        <tr>
+            <td>ID</td>
+            <td>姓名</td>
+            <td>年龄</td>
+        </tr>
+    </thead>
+
+    @if (persons != null)
+    {
+        foreach (var item in persons)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+                <td>@item.Age</td>
+            </tr>
+        }
+    }
+</table>
